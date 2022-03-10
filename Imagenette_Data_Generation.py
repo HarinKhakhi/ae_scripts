@@ -164,40 +164,47 @@ def create_org_dataset():
 
   return {'X': X, 'X_processed': X_processed, 'y': y}
 
-def create_adv_dataset(X, y):
+def create_adv_dataset(X_all, classes=class_list):
   global adv_generating_time
-  start = time.perf_counter()
+  adv_generating_time = 0
   
-  X_adv = attack.generate(x=X, verbose=True)
-  
-  end = time.perf_counter()
-  adv_generating_time = round(end-start,2)
-  
-  # Saving images
-  cnt = 0
-  for ind, image_array in enumerate(X_adv):
-    # converting to 0 - 255 range
-    image = Image.fromarray(to_image(image_array))
-    
-    # file path
-    file_name = 'adversarial_' + index_to_class[y[ind]] + '_' + str(cnt) + '.png'
-    file_path = join(adv_dataset_images , file_name)
-    
-    # saving file
-    image.save(file_path)
-    
-    cnt += 1
-    cnt %= perClass
+  for class_name in classes:
+    # Finding indexes
+    class_index = class_list.index(class_name)
+    start_index = class_index * perClass
+    end_index = (class_index+1) * perClass
 
+    # Attacking on subset of dataset
+    start = time.perf_counter()
 
-  # Saving npz
-  for i, start_index in enumerate(range(0, perClass*len(class_list), perClass)):
+    X_adv = attack.generate(x=X_all[start_index : end_index], verbose=True)
+
+    end = time.perf_counter()
+    adv_generating_time += round(end-start,2)
+
+    # Saving images
+    cnt = 0
+    for ind, image_array in enumerate(X_adv):
+      # converting to 0 - 255 range
+      image = Image.fromarray(to_image(image_array))
+      
+      # file path
+      file_name = f'adversarial_{class_name}_{cnt}.png'
+      file_path = join(adv_dataset_images , file_name)
+      
+      # saving file
+      image.save(file_path)
+      
+      cnt += 1
+
+    # Saving npz
+
     # file path
-    file_name = f'adversarial_{class_list[i]}.npz'
+    file_name = f'adversarial_{class_name}.npz'
     file_path = join(adv_dataset_npz, file_name)
     
     # saving file
-    np.savez_compressed(file_path, data=X_adv[start_index:start_index+perClass])
+    np.savez_compressed(file_path, data=X_adv)
 ##############################################################################
 
 ############################## LOADING DATA ##################################
