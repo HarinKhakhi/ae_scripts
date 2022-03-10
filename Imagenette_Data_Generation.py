@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from urllib.request import urlopen
 import time
+import csv 
 
 import os
 from os.path import join
@@ -23,10 +24,10 @@ from art.attacks.evasion import NewtonFool
 ##############################################################################
 
 ################################# PARAMETERS #################################
-epsilon = 0.1
+epsilon = 0.01
 eps_step = epsilon / 10
 
-attack_type = 'FGSM' # 'FGSM', 'PGD', 'DF', 'CW', 'BIM', 'NF'
+attack_type = 'DF' # 'FGSM', 'PGD', 'DF', 'CW', 'BIM', 'NF'
 ##############################################################################
 
 ################################# CONSTANTS ##################################
@@ -35,9 +36,9 @@ image_size_str = str(image_size[0]) + '_' + str(image_size[1]) + '_' + str(image
 epsilon_str = str(epsilon).split('.')[0] + "_" + str(epsilon).split('.')[1]
 perClass = 100
 
-prefix = "/content/drive/MyDrive/AE_Resources/Imagenette"
+prefix = "/home/admin-pc/Desktop/ae"
 
-dataset = f"{prefix}/Imagenette-320"
+dataset = f"{prefix}/imagenette2-320"
 
 org_dataset_images = f"{prefix}/Original/Images"
 org_dataset_npz = f"{prefix}/Original/NPZ"
@@ -45,7 +46,8 @@ org_dataset_npz = f"{prefix}/Original/NPZ"
 adv_dataset_images = f"{prefix}/{attack_type}/{epsilon_str}/Images"
 adv_dataset_npz = f"{prefix}/{attack_type}/{epsilon_str}/NPZ"
 
-results_images = f"{prefix}/Results/"
+results_image = f"{prefix}/Results/{attack_type}_{epsilon_str}.jpg"
+results_csv = f"{prefix}/Metadata/{attack_type}_{epsilon_str}.csv"
 
 for directory in [org_dataset_images, org_dataset_npz, adv_dataset_images, adv_dataset_npz]:
   if not os.path.isdir(directory):
@@ -169,11 +171,8 @@ def create_adv_dataset(X, y):
   X_adv = attack.generate(x=X, verbose=True)
   
   end = time.perf_counter()
-  adv_generating_time = end-start
-  print('Time :',adv_generating_time)
-
-  print('Saving Images...')
-
+  adv_generating_time = round(end-start,2)
+  
   # Saving images
   cnt = 0
   for ind, image_array in enumerate(X_adv):
@@ -303,11 +302,13 @@ def show_images(X:np.ndarray, y:np.ndarray, X_adv=None, y_adv=None, n=5):
       # Difference Image
       axs[2, i].imshow(abs(to_image(X[ind]) - to_image(X_adv[ind])))
       axs[2, i].set_title("Difference")      
+
+  plt.savefig(results_image)
 ##############################################################################
 
 ############################# MAIN SCRIPT ####################################
 # Generating Original Data
-if (len(os.listdir(org_dataset_images)) == 0 and len(os.listdir(org_dataset_npz))) == 0:
+if (len(os.listdir(org_dataset_images)) == 0) and (len(os.listdir(org_dataset_npz)) == 0):
   print('Creating Original Data')
   data = create_org_dataset()
   print('Generated Original Data')
@@ -325,7 +326,9 @@ org_accuracy = (np.sum(org_class == y))/len(y)
 print('Original Accuracy :', org_accuracy)
 
 # Generating Adversarial Data
+print('Generating Adversarial Data')
 create_adv_dataset(X, org_class)
+print('Generated Adversarial Data')
 
 # Loading Adversarial Data
 fromImage=False
@@ -339,11 +342,22 @@ print('Adversarial Accuracy :', adv_accuracy)
 
 show_images(X=X, y=org_class, X_adv=X_adv, y_adv=y_adv)
 ##############################################################################
-
-
+header = ['attack_type', 'image_size', 'epsilon', 'org_accuracy', 'adv_accuracy', 'time']
+if os.path.isfile(results_csv) == False:
+  with open(results_csv, 'w+') as f:
+    writer = csv.writer(f)
+    writer.writerow(header)
+    
+data = [attack_type, image_size, epsilon, org_accuracy, adv_accuracy, adv_generating_time]
+with open(results_csv, 'a') as f:
+  writer = csv.writer(f)
+  writer.writerow(data)
+  
+print('\033[92m')
 print('Attack: ', attack_type)
 print('Image Size: ', image_size)
 print('Epsilon: ', epsilon)
 print('Original Accuracy: ', org_accuracy)
 print('Adversarial Accuracy: ', adv_accuracy)
-print('Time Taken: ', round(adv_generating_time, 2))
+print('Time Taken: ', adv_generating_time)
+print('\033[0m')
