@@ -32,10 +32,20 @@ class Attacks(enum.Enum):
   
 class AE:
   def __init__(self, params, classifier):
+    prefix = params['prefix']
     epsilon = params['epsilon']
     eps_step = params['eps_step']
     max_iter = params['max_iter']
     attack_type = params['attack_type']
+    epsilon_str = params['epsilon_str']
+    params['dataset'] = f"{prefix}/imagenette2-320"
+    params['org_dataset_images'] = f"{prefix}/Original/Images"
+    params['org_dataset_npz'] = f"{prefix}/Original/NPZ"
+    params['adv_dataset_images'] = f"{prefix}/{attack_type}/{epsilon_str}/Images"
+    params['adv_dataset_npz'] = f"{prefix}/{attack_type}/{epsilon_str}/NPZ"
+    params['results_image'] = f"{prefix}/Results/{attack_type}_{epsilon_str}.jpg"
+    params['results_csv'] = f"{prefix}/Metadata/{attack_type}_{epsilon_str}.csv"
+
     
     self.params = params
     self.module = inception_v3
