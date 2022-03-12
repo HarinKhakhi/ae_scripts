@@ -9,11 +9,8 @@ import matplotlib.pyplot as plt
 import enum
 import csv
 
-from tensorflow.keras.layers import Input
-from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.applications import inception_v3
 
-from art.estimators.classification import TensorFlowV2Classifier
 from art.attacks.evasion import FastGradientMethod
 from art.attacks.evasion import ProjectedGradientDescent
 from art.attacks.evasion import BasicIterativeMethod
@@ -139,7 +136,7 @@ class AE:
 
     return {'X': X, 'X_processed': X_processed, 'y': y}
 
-  def create_adv_dataset(self, X_all, classes):
+  def create_adv_dataset(self, X_all, classes, saveImage=True):
     per_class = self.params['per_class']
     attack = self.attack
     adv_dataset_images = self.params['adv_dataset_images']
@@ -168,29 +165,30 @@ class AE:
       adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv))/len(y_adv)
       print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy), end='\r')
       
-      # Saving images
-      cnt = 0
-      for ind, image_array in enumerate(X_adv):
-        # converting to 0 - 255 range
-        image = Image.fromarray(self.to_image(image_array))
-        
+      if saveImage:
+        # Saving images
+        cnt = 0
+        for ind, image_array in enumerate(X_adv):
+          # converting to 0 - 255 range
+          image = Image.fromarray(self.to_image(image_array))
+          
+          # file path
+          file_name = f'adversarial_{class_name}_{cnt}.png'
+          file_path = join(adv_dataset_images , file_name)
+          
+          # saving file
+          image.save(file_path)
+          
+          cnt += 1
+
+        # Saving npz
+
         # file path
-        file_name = f'adversarial_{class_name}_{cnt}.png'
-        file_path = join(adv_dataset_images , file_name)
+        file_name = f'adversarial_{class_name}.npz'
+        file_path = join(adv_dataset_npz, file_name)
         
         # saving file
-        image.save(file_path)
-        
-        cnt += 1
-
-      # Saving npz
-
-      # file path
-      file_name = f'adversarial_{class_name}.npz'
-      file_path = join(adv_dataset_npz, file_name)
-      
-      # saving file
-      np.savez_compressed(file_path, data=X_adv)
+        np.savez_compressed(file_path, data=X_adv)
       
     self.params['adv_generating_time'] = adv_generating_time
   ##############################################################################
@@ -376,7 +374,7 @@ class AE:
     X, org_class = self.get_org_dataset(fromImage=False)
     print('Original Accuracy: ', self.get_accuracy(X, org_class))
     
-    self.create_adv_dataset(X, self.params['class_list'])
+    self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
     
     X_adv = self.get_adv_dataset(fromImage=False)
     y_adv = self.get_predictions(X_adv, org_class)
