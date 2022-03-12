@@ -15,7 +15,7 @@ from art.attacks.evasion import BasicIterativeMethod
 from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
 from art.attacks.evasion import NewtonFool
-from art.attacks.evasion import ShadowAttack
+from art.attacks.evasion import HighConfidenceLowUncertainty
 
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
@@ -24,7 +24,7 @@ class Attacks(enum.Enum):
   CW = 'CW'
   BIM = 'BIM'
   NF = 'NF'
-  SA = 'SA'
+  HCLU = 'HCLU'
   
 class AE:
   def __init__(self, params, classifier):
@@ -60,8 +60,8 @@ class AE:
         attacks[attack.name] = BasicIterativeMethod(self.classifier, epsilon, eps_step)
       if attack.name == 'NF':
         attacks[attack.name] = NewtonFool(self.classifier, max_iter=max_iter)
-      if attack.name == 'SA':
-        attacks[attack.name] = ShadowAttack(self.classifier)
+      if attack.name == 'HCLU':
+        attacks[attack.name] = HighConfidenceLowUncertainty(self.classifier)
   
     self.attack = attacks[attack_type]
   
