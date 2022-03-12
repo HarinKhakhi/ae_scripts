@@ -148,13 +148,14 @@ class AE:
     class_list = self.params['class_list']
     
     adv_generating_time = 0
-    
+    adv_accuracy = []
     for class_name in classes:
       # Finding indexes
       class_index = class_list.index(class_name)
       start_index = class_index * per_class
       end_index = (class_index+1) * per_class
 
+      print(f'Attacking Class {class_index}: {class_name}')
       # Attacking on subset of dataset
       start = time.perf_counter()
 
@@ -164,8 +165,8 @@ class AE:
       adv_generating_time += round(end-start,2)
 
       y_adv = np.argmax(self.classifier.predict(X_adv), axis=1)
-      org_accuracy = (np.sum(class_to_index[class_name] == y_adv))/len(y_adv)
-      print('Adversarial Accuracy :', org_accuracy)
+      adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv))/len(y_adv)
+      print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy), end='\r')
       
       # Saving images
       cnt = 0
@@ -265,7 +266,7 @@ class AE:
           X_adv.append(image)
 
     else:
-      for class_name in self.class_list:
+      for class_name in class_list:
         # File path
         file_name = f'adversarial_{class_name}.npz'
         file_path = join(adv_dataset_npz, file_name)
