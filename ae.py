@@ -377,7 +377,7 @@ class AE:
     self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
     
     X_adv = self.get_adv_dataset(fromImage=False)
-    y_adv = self.get_predictions(X_adv, org_class)
+    y_adv = self.get_predictions(X_adv)
     
     print('Adversarial Accuracy: ', self.get_accuracy(X_adv, org_class))  
 
