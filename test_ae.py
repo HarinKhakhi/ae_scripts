@@ -5,7 +5,7 @@ from ae import Attacks
 ########################### CONSTANTS ###########################
 epsilon = 0.1
 eps_step = epsilon/10
-attack_type = Attacks.FGSM
+attack_type = Attacks.FGSM.name
 prefix = '/content/drive/MyDrive/AE_Resources/Imagenette'
 image_size = (300, 300, 3)
 per_class = 100

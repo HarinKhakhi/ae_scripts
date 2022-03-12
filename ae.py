@@ -7,6 +7,7 @@ from PIL import Image
 from datetime import time
 import matplotlib.pyplot as plt
 import enum
+import csv
 
 from tensorflow.keras.layers import Input
 from tensorflow.keras.losses import CategoricalCrossentropy
@@ -30,23 +31,7 @@ class Attacks(enum.Enum):
   NF = 'NF'
   
 class AE:
-  ############################## CONSTANTS ####################################
-  class_to_index = {
-    'n01440764': 0,
-    'n02102040': 217,
-    'n02979186': 482,
-    'n03000684': 491,
-    'n03028079': 497,
-    'n03394916': 566,
-    'n03417042': 569,
-    'n03425413': 571,
-    'n03445777': 574,
-    'n03888257': 701,
-  }
-  class_list = sorted(list(class_to_index.keys()))
-  ######################################################
-  def __init__(self, params):
-    image_size = params['image_size']
+  def __init__(self, params, classifier):
     epsilon = params['epsilon']
     eps_step = params['eps_step']
     max_iter = params['max_iter']
@@ -54,16 +39,7 @@ class AE:
     
     self.params = params
     self.module = inception_v3
-    self.model = inception_v3.InceptionV3( input_tensor=Input(shape=image_size),
-                                      include_top=True, 
-                                      weights='imagenet', 
-                                      classifier_activation='softmax')
-    loss = CategoricalCrossentropy(from_logits=False)
-    self.classifier = TensorFlowV2Classifier(model=self.model,
-                                        nb_classes=1000,
-                                        loss_object=loss,
-                                        input_shape=image_size,
-                                        clip_values=(0,1))
+    self.classifier = classifier
     
     attacks = dict()
     for attack in Attacks:
@@ -98,6 +74,7 @@ class AE:
     org_dataset_images = self.params['org_dataset_images']
     org_dataset_npz = self.params['org_dataset_npz']
     per_class = self.params['per_class']
+    class_to_index = self.parmas['class_to_index']
     
     X_processed = []
     X = []
@@ -133,7 +110,7 @@ class AE:
         processed_images.append(image_array)
 
         X_processed.append(image_array)
-        y.append(int(self.class_to_index[dir]))
+        y.append(int(class_to_index[dir]))
         cnt+=1
         if cnt == per_class:
           break 
@@ -153,18 +130,19 @@ class AE:
 
     return {'X': X, 'X_processed': X_processed, 'y': y}
 
-  def create_adv_dataset(self, X_all, classes=class_list):
+  def create_adv_dataset(self, X_all, classes):
     per_class = self.params['per_class']
     attack = self.attack
     adv_dataset_images = self.params['adv_dataset_images']
     adv_dataset_npz = self.params['adv_dataset_npz']
+    class_to_index = self.params['class_to_index']
+    class_list = self.params['class_list']
     
-    global adv_generating_time
     adv_generating_time = 0
     
     for class_name in classes:
       # Finding indexes
-      class_index = self.class_list.index(class_name)
+      class_index = class_list.index(class_name)
       start_index = class_index * per_class
       end_index = (class_index+1) * per_class
 
@@ -177,7 +155,7 @@ class AE:
       adv_generating_time += round(end-start,2)
 
       y_adv = np.argmax(self.classifier.predict(X_adv), axis=1)
-      org_accuracy = (np.sum(self.class_to_index[class_name] == y_adv))/len(y_adv)
+      org_accuracy = (np.sum(class_to_index[class_name] == y_adv))/len(y_adv)
       print('Adversarial Accuracy :', org_accuracy)
       
       # Saving images
@@ -203,6 +181,8 @@ class AE:
       
       # saving file
       np.savez_compressed(file_path, data=X_adv)
+      
+    self.params['adv_generating_time'] = adv_generating_time
   ##############################################################################
 
   ############################## LOADING DATA ##################################
@@ -210,11 +190,14 @@ class AE:
     per_class = self.params['per_class']
     org_dataset_images = self.params['org_dataset_images']
     org_dataset_npz = self.params['org_dataset_npz']
+    class_to_index = self.params['class_to_index']
+    class_list = self.params['class_list']
+    
     X = []
     y = []
     
     if fromImage:
-      for class_name in self.class_list:
+      for class_name in class_list:
         for ind in range(per_class):
           # File path
           image_file_name = f'original_{class_name}_{ind}.png'
@@ -227,10 +210,10 @@ class AE:
         
           # Extracting Class
           class_name = image_file_name.split('_')[1]
-          y.append(int(self.class_to_index[class_name]))
+          y.append(int(class_to_index[class_name]))
       
     else:
-      for class_name in self.class_list:
+      for class_name in class_list:
         # File path
         image_file_name = f'original_{class_name}.npz'
         image_file_path = join(org_dataset_npz, image_file_name)
@@ -242,21 +225,26 @@ class AE:
 
         # Extracting Class
         for times in range(per_class):
-          y.append(int(self.class_to_index[class_name]))
+          y.append(int(class_to_index[class_name]))
 
     X=np.array(X)
     y=np.array(y)
+    
+    if fromImage:
+      X = self.module.preprocess_input(X)
+      
     return X,y
 
   def get_adv_dataset(self, fromImage=True):
     per_class = self.params['per_class']
     adv_dataset_images = self.params['adv_dataset_images']
     adv_dataset_npz = self.params['adv_dataset_npz']
+    class_list = self.params['class_list']
     
     X_adv = []
 
     if fromImage:
-      for class_name in self.class_list:
+      for class_name in class_list:
         for ind in range(per_class):
           # File path
           file_name = f'adversarial_{class_name}_{ind}.png'
@@ -279,12 +267,58 @@ class AE:
           X_adv.append(processed_image)
 
     X_adv=np.array(X_adv)
+    if fromImage:
+      X_adv = self.module.preprocess_input(X_adv)
+      
     return X_adv
   ##############################################################################
 
   ############################# DATA VISULIZATION ##############################
   def show_images(self, X:np.ndarray, y:np.ndarray, X_adv=None, y_adv=None, n=5):
+    # Choosing random indexes
+    inds = np.random.choice(X.shape[0], n, replace=False)
+
+    if X is None or X_adv is None:
+      fig, axs = plt.subplots(1, n, figsize=(3*n,10))
+      # Plotting data 
+      for i, ind in enumerate(inds):
+
+        # Original Image
+        axs[i].imshow(self.to_image(X[ind]))
+        axs[i].set_title(y[ind])
+
+    else:
+      fig, axs = plt.subplots(3, n, figsize=(3*n,10))
+      # Plotting data 
+      for i, ind in enumerate(inds):
+
+        # Original Image
+        axs[0, i].imshow(self.to_image(X[ind]))
+        axs[0, i].set_title(y[ind])    
+
+        # Adversarial Image
+        axs[1, i].imshow(self.to_image(X_adv[ind]))
+        axs[1, i].set_title(y_adv[ind])    
+
+        # Difference Image
+        axs[2, i].imshow(abs(self.to_image(X[ind]) - self.to_image(X_adv[ind])))
+        axs[2, i].set_title("Difference")      
+  ##############################################################################
+  
+  ################################## RESULTS ###################################
+  def get_predictions(self, X):
+    return np.argmax(self.classifier.predict(X), axis=1)
+  
+  def get_accuracy(self, X, org_class):
+    y = np.argmax(self.classifier.predict(X), axis=1)
+    org_accuracy = (np.sum(org_class == y))/len(y)
+    return org_accuracy
+  
+  def save(self, X:np.ndarray, y:np.ndarray, X_adv=None, y_adv=None, n=5):
+    params = self.params
     results_image = self.params['results_image']
+    results_csv = self.params['results_csv']
+    
     # Choosing random indexes
     inds = np.random.choice(X.shape[0], n, replace=False)
 
@@ -315,4 +349,17 @@ class AE:
         axs[2, i].set_title("Difference")      
 
     plt.savefig(results_image)
+    
+    header = ['attack_type', 'image_size', 'epsilon', 'org_accuracy', 'adv_accuracy', 'time']
+    if os.path.isfile(results_csv) == False:
+      with open(results_csv, 'w+') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        
+    data = [params['attack_type'], params['image_size'], params['epsilon'], params['org_accuracy'], params['adv_accuracy'], params['adv_generating_time']]
+    with open(results_csv, 'a') as f:
+      writer = csv.writer(f)
+      writer.writerow(data)
   ##############################################################################
+
+  
