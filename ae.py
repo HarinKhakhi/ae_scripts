@@ -4,7 +4,7 @@ import numpy as np
 import os
 from os.path import join
 from PIL import Image
-from datetime import time
+import time
 import matplotlib.pyplot as plt
 import enum
 import csv
