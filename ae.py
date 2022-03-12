@@ -1,5 +1,3 @@
-from copyreg import constructor
-from importlib_metadata import pass_none
 import numpy as np
 import os
 from os.path import join
@@ -17,7 +15,7 @@ from art.attacks.evasion import BasicIterativeMethod
 from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
 from art.attacks.evasion import NewtonFool
-
+from art.attacks.evasion import ShadowAttack
 
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
@@ -26,6 +24,7 @@ class Attacks(enum.Enum):
   CW = 'CW'
   BIM = 'BIM'
   NF = 'NF'
+  SA = 'SA'
   
 class AE:
   def __init__(self, params, classifier):
@@ -61,7 +60,9 @@ class AE:
         attacks[attack.name] = BasicIterativeMethod(self.classifier, epsilon, eps_step)
       if attack.name == 'NF':
         attacks[attack.name] = NewtonFool(self.classifier, max_iter=max_iter)
-    
+      if attack.name == 'SA':
+        attacks[attack.name] = ShadowAttack(self.classifier)
+  
     self.attack = attacks[attack_type]
   
   ############################ PREPROCESSING DATA ##############################
@@ -377,7 +378,7 @@ class AE:
     self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
     
     X_adv = self.get_adv_dataset(fromImage=False)
-    y_adv = self.get_predictions(X_adv)
+    y_adv = self.get_predictions(X_adv, org_class)
     
     print('Adversarial Accuracy: ', self.get_accuracy(X_adv, org_class))  
 
