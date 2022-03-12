@@ -66,10 +66,7 @@ class_to_index = {
     'n03445777': 574,
     'n03888257': 701,
 }
-index_to_class = {class_index: class_name for class_name, class_index in class_to_index.items()} # inversting the dictionary
 class_list = sorted(list(class_to_index.keys()))
-
-index_to_name = pickle.load(urlopen('https://gist.githubusercontent.com/yrevar/6135f1bd8dcf2e0cc683/raw/d133d61a09d7e5a3b36b8c111a8dd5c4b5d560ee/imagenet1000_clsid_to_human.pkl') )
 
 nb_classes = 1000 # Number of ImageNet classes
 
@@ -334,7 +331,7 @@ print('Original Accuracy :', org_accuracy)
 
 # Generating Adversarial Data
 print('Generating Adversarial Data')
-create_adv_dataset(X, org_class)
+create_adv_dataset(X, class_list)
 print('Generated Adversarial Data')
 
 # Loading Adversarial Data
