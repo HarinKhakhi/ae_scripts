@@ -162,7 +162,7 @@ class AE:
       adv_generating_time += round(end-start,2)
 
       y_adv = np.argmax(self.classifier.predict(X_adv), axis=1)
-      adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv))/len(y_adv)
+      adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv)/len(y_adv))
       print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy), end='\r')
       
       if saveImage:
