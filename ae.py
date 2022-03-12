@@ -372,4 +372,15 @@ class AE:
       writer.writerow(data)
   ##############################################################################
 
-  
+  def test_attack(self):
+    X, org_class = self.get_org_dataset(fromImage=False)
+    print('Original Accuracy: ', self.get_accuracy(X, org_class))
+    
+    self.create_adv_dataset(X, self.params['class_list'])
+    
+    X_adv = self.get_adv_dataset(fromImage=False)
+    y_adv = self.get_predictions(X_adv, org_class)
+    
+    print('Adversarial Accuracy: ', self.get_accuracy(X_adv, org_class))  
+
+    self.show_images(X, org_class, X_adv, y_adv)
