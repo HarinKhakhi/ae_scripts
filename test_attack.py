@@ -63,7 +63,7 @@ org_accuracy = ae.get_accuracy(X, org_class)
 print('Original Accuracy :', org_accuracy)
 
 # Generating Adversarial Data
-X_adv = ae.create_adv_dataset(X, ae.params['class_list'], saveImage=False)
+X_adv = ae.get_adv_dataset(fromImage=False)
 y_adv = ae.get_predictions(X_adv)
 
 adv_accuracy = ae.get_accuracy(X_adv, org_class)
