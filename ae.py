@@ -15,7 +15,6 @@ from art.attacks.evasion import BasicIterativeMethod
 from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
 from art.attacks.evasion import NewtonFool
-from art.attacks.evasion import HighConfidenceLowUncertainty
 
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
@@ -24,7 +23,6 @@ class Attacks(enum.Enum):
   CW = 'CW'
   BIM = 'BIM'
   NF = 'NF'
-  HCLU = 'HCLU'
   
 class AE:
   def __init__(self, params, classifier):
@@ -37,7 +35,25 @@ class AE:
     eps_step = params['eps_step']
     max_iter = params['max_iter']
     attack_type = params['attack_type']
-    epsilon_str = params['epsilon_str']
+
+    class_to_index = {
+      'n01440764': 0,
+      'n02102040': 217,
+      'n02979186': 482,
+      'n03000684': 491,
+      'n03028079': 497,
+      'n03394916': 566,
+      'n03417042': 569,
+      'n03425413': 571,
+      'n03445777': 574,
+      'n03888257': 701,
+    }
+    class_list = sorted(list(class_to_index.keys()))
+    epsilon_str = str(epsilon).split('.')[0] + "_" + str(epsilon).split('.')[1]
+    
+    self.params['class_to_index'] = class_to_index
+    self.params['class_list'] = class_list
+    self.params['epsilon_str'] = epsilon_str
     self.params['dataset'] = f"{prefix}/imagenette2-320"
     self.params['org_dataset_images'] = f"{prefix}/Original/Images"
     self.params['org_dataset_npz'] = f"{prefix}/Original/NPZ"
@@ -60,9 +76,7 @@ class AE:
         attacks[attack.name] = BasicIterativeMethod(self.classifier, epsilon, eps_step)
       if attack.name == 'NF':
         attacks[attack.name] = NewtonFool(self.classifier, max_iter=max_iter)
-      if attack.name == 'HCLU':
-        attacks[attack.name] = HighConfidenceLowUncertainty(self.classifier)
-  
+
     self.attack = attacks[attack_type]
   
   ############################ PREPROCESSING DATA ##############################
@@ -145,6 +159,7 @@ class AE:
     class_to_index = self.params['class_to_index']
     class_list = self.params['class_list']
     
+    X_adv_all = []
     adv_generating_time = 0
     adv_accuracy = []
     for class_name in classes:
@@ -190,8 +205,13 @@ class AE:
         
         # saving file
         np.savez_compressed(file_path, data=X_adv)
-      
+      else :
+        for attacked_image in X_adv:
+          X_adv_all.append(attacked_image)
+            
     self.params['adv_generating_time'] = adv_generating_time
+    
+    return np.array(X_adv_all)
   ##############################################################################
 
   ############################## LOADING DATA ##################################
@@ -375,11 +395,8 @@ class AE:
     X, org_class = self.get_org_dataset(fromImage=False)
     print('Original Accuracy: ', self.get_accuracy(X, org_class))
     
-    self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
-    
-    X_adv = self.get_adv_dataset(fromImage=False)
+    X_adv = self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
     y_adv = self.get_predictions(X_adv, org_class)
-    
     print('Adversarial Accuracy: ', self.get_accuracy(X_adv, org_class))  
 
     self.show_images(X, org_class, X_adv, y_adv)
