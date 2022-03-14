@@ -332,6 +332,7 @@ class AE:
         # Difference Image
         axs[2, i].imshow(abs(self.to_image(X[ind]) - self.to_image(X_adv[ind])))
         axs[2, i].set_title("Difference")      
+    plt.show()
   ##############################################################################
   
   ################################## RESULTS ###################################
