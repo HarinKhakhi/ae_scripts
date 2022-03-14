@@ -179,7 +179,7 @@ class AE:
 
       y_adv = np.argmax(self.classifier.predict(X_adv), axis=1)
       adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv)/len(y_adv))
-      print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy), end='\r')
+      print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy))
       
       if saveImage:
         # Saving images
