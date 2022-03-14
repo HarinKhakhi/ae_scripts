@@ -14,7 +14,7 @@ attack_type = Attacks.FGSM.name
 prefix = '/content/drive/MyDrive/AE_Resources/Imagenette/Datasets'
 image_size = (300, 300, 3)
 per_class = 100
-max_iter = 10
+max_iter = 100
 class_start_index = 0
 class_end_index = 10
 #################################################################
@@ -30,22 +30,24 @@ classifier = TensorFlowV2Classifier(model=model,
                                     clip_values=(-1,1))
 ########################### ARGUMENTS ###########################
 try:
-  opts, args = getopt.getopt(sys.argv[1:],"he:a:n:p:i:j:",["epsilon=","attack=","per_class=", "path=", "class_start=", "class_end="])
+  opts, args = getopt.getopt(sys.argv[1:],"ha:e:t:n:p:i:j:",["attack=","epsilon=","max_iter=","per_class=", "path=", "class_start=", "class_end="])
 except getopt.GetoptError:
   print('script.py \
-      --epsilon <epsilon> \
       --attack <attack> \
-      --save_image  <bool> \
+      --epsilon <epsilon> \
+      --max_iter <int> \
       --per_class <int> \
       --path <path_to_directory> \
       --class_start <int> \
       --class_end <int>')
   sys.exit(2)
 for opt, arg in opts:
-  if opt in ('-e', '--epsilon'):
-    epsilon = float(arg)
   if opt in ('-a', '--attack'):
     attack_type = arg
+  if opt in ('-e', '--epsilon'):
+    epsilon = float(arg)
+  if opt in ('-t', '--max_iter'):
+    max_iter = int(arg)  
   if opt in ('-n', '--per_class'):
     per_lass = int(arg)
   if opt in ('-p', '--path'):
@@ -56,13 +58,14 @@ for opt, arg in opts:
     class_end_index = int(arg)
   if opt in ('-h'):
     print('script.py \
-      --epsilon <epsilon> \
       --attack <attack> \
-      --save_image  <bool> \
+      --epsilon <epsilon> \
+      --max_iter <int> \
       --per_class <int> \
       --path <path_to_directory> \
       --class_start <int> \
       --class_end <int>')
+    sys.exit()
 #################################################################
 
 params = {
