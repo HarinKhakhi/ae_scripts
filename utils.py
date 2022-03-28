@@ -77,16 +77,18 @@ def initialize(params):
   for attack in Attacks:
     if attack.name == 'FGSM':
       attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
-    if attack.name == 'PGD':
+    elif attack.name == 'PGD':
       attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
-    if attack.name == 'DF':
+    elif attack.name == 'DF':
       attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
-    if attack.name == 'CW':
+    elif attack.name == 'CW':
       attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
-    if attack.name == 'BIM':
+    elif attack.name == 'BIM':
       attack = BasicIterativeMethod(classifier, epsilon, eps_step)
-    if attack.name == 'NF':
+    elif attack.name == 'NF':
       attack = NewtonFool(classifier, max_iter=max_iter)
+    else:
+      raise NameError("Attack is not available")
   
   params['module'] = module
   params['classifier'] = classifier
