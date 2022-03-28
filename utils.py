@@ -123,8 +123,8 @@ def batch_data(X_all, y_all, per_batch=None, total_batches=None):
   if(per_batch == None and total_batches == None): return None
   if(per_batch != None and total_batches != None and per_batch*total_batches != len(X_all)): return None
   
-  per_batch = per_batch if per_batch is not None else len(X_all)/total_batches
-  total_batches = total_batches if total_batches is not None else len(X_all)/per_batch
+  per_batch = per_batch if per_batch is not None else int(len(X_all)/total_batches)
+  total_batches = total_batches if total_batches is not None else int(len(X_all)/per_batch)
   
   X = []
   y = []
