@@ -79,13 +79,58 @@ class AE:
 
     self.attack = attacks[attack_type]
   
-  ############################ PREPROCESSING DATA ##############################
+  ############################## PROCESSING DATA ##############################
   def to_image(self, image):
     OldMin, OldMax = np.min(image), np.max(image)
     NewMin, NewMax = 0.0, 256.0
     OldRange = (OldMax - OldMin)  
     NewRange = (NewMax - NewMin)
     return ((((image - OldMin) * NewRange) / OldRange) + NewMin).astype(np.uint8)
+  
+  def batch_data(self, X_all, y_all, per_batch=None, total_batches=None):
+    if(per_batch == None and total_batches == None): return None
+    if(per_batch != None and total_batches != None and per_batch*total_batches != len(X)): return None
+    
+    per_batch = per_batch if per_batch is not None else len(X)/total_batches
+    total_batches = total_batches if total_batches is not None else len(X)/per_batch
+    
+    X = []
+    y = []
+    for batch_ind in range(total_batches):
+      start_index = batch_ind*per_batch
+      end_index = (batch_ind+1)*per_batch
+      
+      X.append(X_all[start_index: end_index])
+      y.append(y_all[start_index: end_index])
+      
+    return np.array(X), np.array(y)
+
+  def train_test_split(self, X, y, train_size=0.8):
+    per_class = self.params['per_class']
+    X_train, X_test = [], []
+    y_train, y_test = [], []
+
+    # total images per class reduces
+    newPerClass_train = int(per_class * train_size)
+    newPerClass_test = per_class - newPerClass_train
+
+    # split every class
+    for class_start_ind in range(0, X.shape[0], per_class):
+      for ind in range(per_class):
+        if ind < newPerClass_train:
+          X_train.append(X[class_start_ind + ind])
+          y_train.append(y[class_start_ind + ind])
+        else:
+          X_test.append(X[class_start_ind + ind])
+          y_test.append(y[class_start_ind + ind])
+
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+    X_train, y_train = self.batch_data(X_train, y_train, per_batch=newPerClass_train)
+    X_test, y_test = self.batch_data(X_test, y_test, per_batch=newPerClass_test)
+    return (X_train, X_test, y_train, y_test)
   ##############################################################################
 
   ############################# GENERATING DATA ################################
@@ -303,36 +348,70 @@ class AE:
   ##############################################################################
 
   ############################# DATA VISULIZATION ##############################
-  def show_images(self, X:np.ndarray, y:np.ndarray, X_adv=None, y_adv=None, n=5):
-    # Choosing random indexes
-    inds = np.random.choice(X.shape[0], n, replace=False)
+  def show_images(self, X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=''):
+    np.random.seed(1234)
 
-    if X is None or X_adv is None:
-      fig, axs = plt.subplots(1, n, figsize=(3*n,10))
-      # Plotting data 
-      for i, ind in enumerate(inds):
+    if batch:
+      # Choosing random indexes
+      batch_ind = np.random.choice(X.shape[0], 1, replace=False)[0]
+      inds = np.random.choice(X.shape[1], n, replace=False)
 
-        # Original Image
-        axs[i].imshow(self.to_image(X[ind]))
-        axs[i].set_title(y[ind])
+      if X is None or X_adv is None:
+        fig, axs = plt.subplots(1, n, figsize=(3*n,10))
+        # Plotting data 
+        for i, ind in enumerate(inds):
 
+          # Original Image
+          axs[i].imshow(self.to_image(X[batch_ind][ind]))
+          axs[i].set_title(y[batch_ind][ind])
+
+      else:
+        fig, axs = plt.subplots(3, n, figsize=(3*n,10))
+        # Plotting data 
+        for i, ind in enumerate(inds):
+
+          # Original Image
+          axs[0, i].imshow(self.to_image(X[batch_ind][ind]))
+          axs[0, i].set_title(y[batch_ind][ind])    
+
+          # Adversarial Image
+          axs[1, i].imshow(self.to_image(X_adv[batch_ind][ind]))
+          axs[1, i].set_title(y_adv[batch_ind][ind])    
+
+          # Difference Image
+          axs[2, i].imshow(abs(self.to_image(X[batch_ind][ind]) - self.to_image(X_adv[batch_ind][ind])))
+          axs[2, i].set_title("Difference")   
     else:
-      fig, axs = plt.subplots(3, n, figsize=(3*n,10))
-      # Plotting data 
-      for i, ind in enumerate(inds):
+      # Choosing random indexes
+      inds = np.random.choice(X.shape[0], n, replace=False)
 
-        # Original Image
-        axs[0, i].imshow(self.to_image(X[ind]))
-        axs[0, i].set_title(y[ind])    
+      if X is None or X_adv is None:
+        fig, axs = plt.subplots(1, n, figsize=(3*n,10))
+        # Plotting data 
+        for i, ind in enumerate(inds):
 
-        # Adversarial Image
-        axs[1, i].imshow(self.to_image(X_adv[ind]))
-        axs[1, i].set_title(y_adv[ind])    
+          # Original Image
+          axs[i].imshow(self.to_image(X[ind]))
+          axs[i].set_title(y[ind])
 
-        # Difference Image
-        axs[2, i].imshow(abs(self.to_image(X[ind]) - self.to_image(X_adv[ind])))
-        axs[2, i].set_title("Difference")      
-    plt.show()
+      else:
+        fig, axs = plt.subplots(3, n, figsize=(3*n,10))
+        # Plotting data 
+        for i, ind in enumerate(inds):
+
+          # Original Image
+          axs[0, i].imshow(self.to_image(X[ind]))
+          axs[0, i].set_title(f"Org: {y[ind]}")    
+
+          # Adversarial Image
+          axs[1, i].imshow(self.to_image(X_adv[ind]))
+          axs[1, i].set_title(f"Cleaned/Adv: {y_adv[ind]}")    
+
+          # Difference Image
+          axs[2, i].imshow(abs(self.to_image(X[ind]) - self.to_image(X_adv[ind])))
+          axs[2, i].set_title("Difference") 
+    
+    plt.suptitle(title)
   ##############################################################################
   
   ################################## RESULTS ###################################
@@ -391,13 +470,3 @@ class AE:
       writer = csv.writer(f)
       writer.writerow(data)
   ##############################################################################
-
-  def test_attack(self):
-    X, org_class = self.get_org_dataset(fromImage=False)
-    print('Original Accuracy: ', self.get_accuracy(X, org_class))
-    
-    X_adv = self.create_adv_dataset(X, self.params['class_list'], saveImage=False)
-    y_adv = self.get_predictions(X_adv)
-    print('Adversarial Accuracy: ', self.get_accuracy(X_adv, org_class))  
-
-    self.show_images(X, org_class, X_adv, y_adv)
