@@ -105,7 +105,8 @@ def initialize(params):
   
   for directory in [params['org_dataset_images'], params['org_dataset_npz'], params['adv_dataset_images'], params['adv_dataset_npz']]:
     if not os.path.isdir(directory):
-      raise Exception(f'dataset directory {directory} does not exist')
+      os.makedirs(directory)
+      print(f'{directory} created')
 
 ############################## PROCESSING DATA ##############################
 def to_image(image):
@@ -120,10 +121,10 @@ def preprocess(params, X):
 
 def batch_data(X_all, y_all, per_batch=None, total_batches=None):
   if(per_batch == None and total_batches == None): return None
-  if(per_batch != None and total_batches != None and per_batch*total_batches != len(X)): return None
+  if(per_batch != None and total_batches != None and per_batch*total_batches != len(X_all)): return None
   
-  per_batch = per_batch if per_batch is not None else len(X)/total_batches
-  total_batches = total_batches if total_batches is not None else len(X)/per_batch
+  per_batch = per_batch if per_batch is not None else len(X_all)/total_batches
+  total_batches = total_batches if total_batches is not None else len(X_all)/per_batch
   
   X = []
   y = []
