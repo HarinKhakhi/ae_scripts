@@ -474,7 +474,7 @@ def train_autoencoder(params, autoencoder, X, X_adv):
       
     # Mapping original -> original & adversarial -> original. 
     autoencoder.fit(np.vstack([X_image, X_adv_image]),
-                    np.vstack([X_image, X_image]), epoch=10)
+                    np.vstack([X_image, X_image]), epochs=10)
 
   cnt = 0
   for dir in os.listdir():
