@@ -103,6 +103,8 @@ def initialize(params):
   params['adv_dataset_images'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/Images"
   params['adv_dataset_npz'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/NPZ"
   params['autoencoders_dir'] = f"{prefix}/Autoencoders"
+  params['results_img_dir'] = f"{prefix}/Results"
+  params['results_meta_dir'] = f"{prefix}/Metadata"
   params['results_image'] = f"{prefix}/Results/{attack_type}_{epsilon_str}.jpg"
   params['results_csv'] = f"{prefix}/Metadata/{attack_type}_{epsilon_str}.csv"
   
@@ -113,7 +115,7 @@ def initialize(params):
       print(f'{directory} created')
 
   # Results directory
-  for directory in [params['autoencoders_dir'], params['results_image'], params['results_csv']]:
+  for directory in [params['autoencoders_dir'], params['results_img_dir'], params['results_meta_dir']]:
     if not os.path.isdir(directory):
       os.makedirs(directory)
       print(f'{directory} created')
