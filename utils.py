@@ -1,3 +1,4 @@
+from operator import contains
 import numpy as np
 import os
 from os.path import join
@@ -6,7 +7,6 @@ import time
 import matplotlib.pyplot as plt
 import enum
 import csv
-from sklearn import preprocessing
 
 from tensorflow.keras.layers import Input
 from tensorflow.keras.losses import CategoricalCrossentropy
@@ -92,18 +92,28 @@ def initialize(params):
   
   params['module'] = module
   params['classifier'] = classifier
+
   params['class_to_index'] = class_to_index
   params['class_list'] = class_list
   params['epsilon_str'] = epsilon_str
-  params['dataset'] = f"{prefix}/imagenette2-320"
-  params['org_dataset_images'] = f"{prefix}/Original/Images"
-  params['org_dataset_npz'] = f"{prefix}/Original/NPZ"
-  params['adv_dataset_images'] = f"{prefix}/{attack_type}/{epsilon_str}/Images"
-  params['adv_dataset_npz'] = f"{prefix}/{attack_type}/{epsilon_str}/NPZ"
+
+  params['dataset'] = f"{prefix}/Datasets/imagenette2-320"
+  params['org_dataset_images'] = f"{prefix}/Datasets/Original/Images"
+  params['org_dataset_npz'] = f"{prefix}/Datasets/Original/NPZ"
+  params['adv_dataset_images'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/Images"
+  params['adv_dataset_npz'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/NPZ"
+  params['autoencoders_dir'] = f"{prefix}/Autoencoders"
   params['results_image'] = f"{prefix}/Results/{attack_type}_{epsilon_str}.jpg"
   params['results_csv'] = f"{prefix}/Metadata/{attack_type}_{epsilon_str}.csv"
   
+  # Datasets directory
   for directory in [params['org_dataset_images'], params['org_dataset_npz'], params['adv_dataset_images'], params['adv_dataset_npz']]:
+    if not os.path.isdir(directory):
+      os.makedirs(directory)
+      print(f'{directory} created')
+
+  # Results directory
+  for directory in [params['autoencoders_dir'], params['results_image'], params['results_csv']]:
     if not os.path.isdir(directory):
       os.makedirs(directory)
       print(f'{directory} created')
@@ -137,7 +147,7 @@ def batch_data(X_all, y_all, per_batch=None, total_batches=None):
     
   return np.array(X), np.array(y)
 
-def train_test_split(params, X, y, train_size=0.8):
+def train_test_split(params, X, y, train_size=0.8, batch=True):
   per_class = params['per_class']
   X_train, X_test = [], []
   y_train, y_test = [], []
@@ -161,8 +171,10 @@ def train_test_split(params, X, y, train_size=0.8):
   y_train = np.array(y_train)
   y_test = np.array(y_test)
   
-  X_train, y_train = batch_data(X_train, y_train, per_batch=newPerClass_train)
-  X_test, y_test = batch_data(X_test, y_test, per_batch=newPerClass_test)
+  if batch:
+    X_train, y_train = batch_data(X_train, y_train, per_batch=newPerClass_train)
+    X_test, y_test = batch_data(X_test, y_test, per_batch=newPerClass_test)
+    
   return (X_train, X_test, y_train, y_test)
 ##############################################################################
 
@@ -339,8 +351,8 @@ def get_org_dataset(params, fromImage=True):
   y=np.array(y)
   
   if fromImage:
-    X = preprocess(params,)
-    
+    X = preprocess(params, X)
+
   return X,y
 
 def get_adv_dataset(params, fromImage=True):
@@ -377,7 +389,7 @@ def get_adv_dataset(params, fromImage=True):
 
   X_adv=np.array(X_adv)
   if fromImage:
-    X_adv = module.preprocess_input(X_adv)
+    X_adv = preprocess(params, X_adv)
     
   return X_adv
 ##############################################################################
@@ -449,14 +461,58 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
   plt.suptitle(title)
 ##############################################################################
 
+############################# AUTOENCODER ##############################
+def train_autoencoder(params, autoencoder, X, X_adv): 
+  print(f'Total batches: {X.shape[0]}')
+  for epoch in range(10):
+  
+    for X_image, X_adv_image in zip(X, X_adv):
+      # Checking if data is batched or not
+      if not len(X.shape) == 5:
+        # expanding the dimention to merge both images into a array
+        X_image=np.expand_dims(X_image, axis=0)
+        X_adv_image=np.expand_dims(X_adv_image, axis=0)
+        
+      print('Shape passed to AE: ',X_image.shape, X_adv_image.shape)
+      
+      # Mapping original -> original & adversarial -> original. 
+      autoencoder.fit(np.vstack([X_image, X_adv_image]),
+                      np.vstack([X_image, X_image]))
+
+  cnt = 0
+  for dir in os.listdir():
+    if params['model_name'] in dir:
+      cnt+=1
+  
+  params['model_name'] += f'_{cnt}'
+  autoencoder.save(join(params['autoencoders_dir'], params['model_name']))
+##############################################################################
+
+def test_autoencoder(params, autoencoder, X, X_adv, y, y_adv):
+  X_pred = autoencoder.predict(X)
+  X_adv_pred = autoencoder.predict(X_adv)
+  
+  y_pred = get_predictions(params, X_pred)
+  y_adv_pred = get_predictions(params, X_adv_pred)
+  
+  params['org_accuracy'] = get_accuracy(y, get_predictions(X))
+  params['adv_accuracy'] = get_accuracy(y, get_predictions(X_adv))
+  
+  params['org_cleaned_accuracy'] = get_accuracy(y, y_pred)
+  params['adv_cleaned_accuracy'] = get_accuracy(y, y_adv_pred)
+  
+  print('Original Non-Cleaned Classifier Accuracy:', params['org_accuracy'])
+  print('Adversarial Non-Cleaned Classifier Accuracy:', params['adv_accuracy']) 
+  print('Original Cleaned Classifier Accuracy:', params['org_cleaned_accuracy'])
+  print('Adversarial Cleaned Classifier Accuracy:', params['adv_cleaned_accuracy'])
+
 ################################## RESULTS ###################################
 def get_predictions(params, X):
   return np.argmax(params['classifier'].predict(X), axis=1)
 
-def get_accuracy(params, X, org_class):
-  y = np.argmax(params['classifier'].predict(X), axis=1)
-  org_accuracy = (np.sum(org_class == y))/len(y)
-  return org_accuracy
+def get_accuracy(y, y_pred):
+  accuracy = (np.sum(y_pred == y))/len(y)
+  return accuracy
 
 def save(params, X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=''):
   results_image = params['results_image']
