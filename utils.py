@@ -465,18 +465,16 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
 
 ############################# AUTOENCODER ##############################
 def train_autoencoder(params, autoencoder, X, X_adv): 
-  for epoch in range(10):
-    print('epoch:', epoch)
-    for X_image, X_adv_image in zip(X, X_adv):
-      # Checking if data is batched or not
-      if not len(X.shape) == 5:
-        # expanding the dimention to merge both images into a array
-        X_image=np.expand_dims(X_image, axis=0)
-        X_adv_image=np.expand_dims(X_adv_image, axis=0)
-        
-      # Mapping original -> original & adversarial -> original. 
-      autoencoder.fit(np.vstack([X_image, X_adv_image]),
-                      np.vstack([X_image, X_image]))
+  for X_image, X_adv_image in zip(X, X_adv):
+    # Checking if data is batched or not
+    if not len(X.shape) == 5:
+      # expanding the dimention to merge both images into a array
+      X_image=np.expand_dims(X_image, axis=0)
+      X_adv_image=np.expand_dims(X_adv_image, axis=0)
+      
+    # Mapping original -> original & adversarial -> original. 
+    autoencoder.fit(np.vstack([X_image, X_adv_image]),
+                    np.vstack([X_image, X_image]), epoch=10)
 
   cnt = 0
   for dir in os.listdir():
