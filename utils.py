@@ -465,9 +465,8 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
 
 ############################# AUTOENCODER ##############################
 def train_autoencoder(params, autoencoder, X, X_adv): 
-  print(f'Total batches: {X.shape[0]}')
   for epoch in range(10):
-  
+    print('epoch:', epoch)
     for X_image, X_adv_image in zip(X, X_adv):
       # Checking if data is batched or not
       if not len(X.shape) == 5:
@@ -475,8 +474,6 @@ def train_autoencoder(params, autoencoder, X, X_adv):
         X_image=np.expand_dims(X_image, axis=0)
         X_adv_image=np.expand_dims(X_adv_image, axis=0)
         
-      print('Shape passed to AE: ',X_image.shape, X_adv_image.shape)
-      
       # Mapping original -> original & adversarial -> original. 
       autoencoder.fit(np.vstack([X_image, X_adv_image]),
                       np.vstack([X_image, X_image]))
