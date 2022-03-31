@@ -149,7 +149,7 @@ def batch_data(X_all, y_all, per_batch=None, total_batches=None):
     
   return np.array(X), np.array(y)
 
-def train_test_split(params, X, y, train_size=0.8, batch=True):
+def train_test_split(params, X, y, train_size=0.8):
   per_class = params['per_class']
   X_train, X_test = [], []
   y_train, y_test = [], []
@@ -172,11 +172,7 @@ def train_test_split(params, X, y, train_size=0.8, batch=True):
   X_test = np.array(X_test)
   y_train = np.array(y_train)
   y_test = np.array(y_test)
-  
-  if batch:
-    X_train, y_train = batch_data(X_train, y_train, per_batch=newPerClass_train)
-    X_test, y_test = batch_data(X_test, y_test, per_batch=newPerClass_test)
-    
+     
   return (X_train, X_test, y_train, y_test)
 ##############################################################################
 
@@ -463,6 +459,14 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
   plt.suptitle(title)
 ##############################################################################
 
+def set_model_name(params, model_name):
+  cnt = 0
+  for dir in os.listdir():
+    if model_name in dir:
+      cnt+=1
+  
+  params['model_name'] += f'_{cnt}'
+
 ############################# AUTOENCODER ##############################
 def train_autoencoder(params, autoencoder, X, X_adv): 
   for X_image, X_adv_image in zip(X, X_adv):
@@ -476,19 +480,26 @@ def train_autoencoder(params, autoencoder, X, X_adv):
     autoencoder.fit(np.vstack([X_image, X_adv_image]),
                     np.vstack([X_image, X_image]), epochs=10)
 
-  cnt = 0
-  for dir in os.listdir():
-    if params['model_name'] in dir:
-      cnt+=1
-  
-  params['model_name'] += f'_{cnt}'
   autoencoder.save(join(params['autoencoders_dir'], params['model_name']))
 ##############################################################################
 
-def test_autoencoder(params, autoencoder, X, X_adv, y, y_adv):
-  X_pred = autoencoder.predict(X)
-  X_adv_pred = autoencoder.predict(X_adv)
+def test_autoencoder(params, autoencoder, X, X_adv, y):
   
+  if(len(X.shape)==5):
+    X_pred, X_adv_pred = None, None
+    for batch in range(X.shape[0]):
+      if X_pred is None:
+        X_pred = autoencoder.predict(X[batch])
+      else:
+        X_pred = np.append(X_pred, autoencoder.predict(X[batch]), axis=1)
+      if X_adv_pred is None:
+        X_adv_pred = autoencoder.predict(X_adv)
+      else:
+        X_adv_pred = np.append(X_adv_pred, autoencoder.predict(X_adv), axis=1)
+  else:  
+    X_pred = autoencoder.predict(X)
+    X_adv_pred = autoencoder.predict(X_adv)
+    
   y_pred = get_predictions(params, X_pred)
   y_adv_pred = get_predictions(params, X_adv_pred)
   
