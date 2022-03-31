@@ -471,7 +471,7 @@ def set_model_name(params, model_name):
     if model_name in dir:
       cnt+=1
   
-  params['model_name'] += f'_{cnt}'
+  params['model_name'] = f'{model_name}_{cnt}'
 
 ############################# AUTOENCODER ##############################
 def train_autoencoder(params, autoencoder, X, X_adv): 
