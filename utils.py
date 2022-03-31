@@ -493,9 +493,9 @@ def test_autoencoder(params, autoencoder, X, X_adv, y):
       else:
         X_pred = np.append(X_pred, autoencoder.predict(X[batch]), axis=1)
       if X_adv_pred is None:
-        X_adv_pred = autoencoder.predict(X_adv)
+        X_adv_pred = autoencoder.predict(X_adv[batch])
       else:
-        X_adv_pred = np.append(X_adv_pred, autoencoder.predict(X_adv), axis=1)
+        X_adv_pred = np.append(X_adv_pred, autoencoder.predict(X_adv[batch]), axis=1)
   else:  
     X_pred = autoencoder.predict(X)
     X_adv_pred = autoencoder.predict(X_adv)
