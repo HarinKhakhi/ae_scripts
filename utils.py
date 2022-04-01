@@ -93,7 +93,8 @@ def initialize(params):
   
   params['module'] = module
   params['classifier'] = classifier
-
+  params['attack'] = attack
+  
   params['class_to_index'] = class_to_index
   params['class_list'] = class_list
   params['epsilon_str'] = epsilon_str
