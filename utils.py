@@ -75,21 +75,21 @@ def initialize(params):
                                       clip_values=(-1,1))
   
   attack = None
-  for attack in Attacks:
-    if attack.name == 'FGSM':
-      attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
-    elif attack.name == 'PGD':
-      attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
-    elif attack.name == 'DF':
-      attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
-    elif attack.name == 'CW':
-      attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
-    elif attack.name == 'BIM':
-      attack = BasicIterativeMethod(classifier, epsilon, eps_step)
-    elif attack.name == 'NF':
-      attack = NewtonFool(classifier, max_iter=max_iter)
-    else:
-      raise NameError("Attack is not available")
+
+  if attack_type == 'FGSM':
+    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
+  elif attack_type == 'PGD':
+    attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
+  elif attack_type == 'DF':
+    attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
+  elif attack_type == 'CW':
+    attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
+  elif attack_type == 'BIM':
+    attack = BasicIterativeMethod(classifier, epsilon, eps_step)
+  elif attack_type == 'NF':
+    attack = NewtonFool(classifier, max_iter=max_iter)
+  else:
+    raise NameError("Attack is not available")
   
   params['module'] = module
   params['classifier'] = classifier
