@@ -72,7 +72,7 @@ def initialize(params):
                                       nb_classes=1000,
                                       loss_object=loss,
                                       input_shape=image_size,
-                                      clip_values=(-1,1))
+                                      clip_values=(0,1))
   
   attack = None
 
