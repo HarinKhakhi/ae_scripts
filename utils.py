@@ -128,14 +128,18 @@ def to_image(image):
   OldRange = (OldMax - OldMin)  
   NewRange = (NewMax - NewMin)
   return ((((image - OldMin) * NewRange) / OldRange) + NewMin).astype(np.uint8)
-  
+
+# cv2.normalize(X, 
+#                 None, 
+#                 alpha = 0, beta = 1, 
+#                 norm_type = cv2.NORM_MINMAX, 
+#                 dtype = cv2.CV_32F)
+# params['module'].preprocess_input(X)
+def set_preprocessor(params, func):
+  params['preprocessor'] = func
+
 def preprocess(params, X):
-  return cv2.normalize(X, 
-                None, 
-                alpha = 0, beta = 1, 
-                norm_type = cv2.NORM_MINMAX, 
-                dtype = cv2.CV_32F)
-  # return params['module'].preprocess_input(X)
+  return params['preprocessor'](X)
 
 def batch_data(X_all, y_all, per_batch=None, total_batches=None):
   if(per_batch == None and total_batches == None): return None
