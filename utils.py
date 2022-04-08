@@ -477,7 +477,7 @@ def set_model_name(params, model_name):
       cnt+=1
   
   params['model_name'] = f'{model_name}_{cnt}'
-
+  return params['model_name']
 ############################# AUTOENCODER ##############################
 def train_autoencoder(params, autoencoder, X, X_adv): 
   for X_image, X_adv_image in zip(X, X_adv):
