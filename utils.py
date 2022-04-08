@@ -472,10 +472,14 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
 
 def set_model_name(params, model_name):
   cnt = 0
-  for dir in os.listdir():
+  found = False
+  while not found:
     new_model_name = f'{model_name}_{cnt}'
-    if new_model_name in dir:
-      cnt+=1
+    for dir in os.listdir():
+      if new_model_name == dir:
+        found = True
+        cnt+=1
+        break
   
   params['model_name'] = f'{model_name}_{cnt}'
   return params['model_name']
