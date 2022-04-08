@@ -470,12 +470,12 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
   plt.suptitle(title)
 ##############################################################################
 
-def set_model_name(params, model_name):
+def set_autoencoder_name(params, model_name):
   cnt = 0
   found = False
   while not found:
     new_model_name = f'{model_name}_{cnt}'
-    for dir in os.listdir():
+    for dir in os.listdir(params['autoencoders_dir']):
       if new_model_name == dir:
         found = True
         cnt+=1
