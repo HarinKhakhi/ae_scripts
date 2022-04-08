@@ -473,7 +473,8 @@ def show_images(X=None, y=None, X_adv=None, y_adv=None, n=5, batch=False, title=
 def set_model_name(params, model_name):
   cnt = 0
   for dir in os.listdir():
-    if model_name in dir:
+    new_model_name = f'{model_name}_{cnt}'
+    if new_model_name in dir:
       cnt+=1
   
   params['model_name'] = f'{model_name}_{cnt}'
