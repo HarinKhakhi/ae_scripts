@@ -480,6 +480,8 @@ def set_autoencoder_name(params, model_name):
         found = True
         cnt+=1
         break
+    if not found: 
+      break
   
   params['model_name'] = f'{model_name}_{cnt}'
   return params['model_name']
