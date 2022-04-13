@@ -143,10 +143,10 @@ def preprocess(params, X):
   return params['preprocessor'](X)
 
 def batch_data(X_all, y_all, per_batch=2):
+  X_batched, y_batched = [], []
   for batch_ind in range(int(X_all.shape[0] / (per_batch*10))):
-    X_batched, y_batched = [], []
-    
     per_class = int(X_all.shape[0]/10)
+    
     for class_ind in range(10):
       class_start_index = class_ind * per_class
       for image in X_all[(class_start_index + (batch_ind*per_batch)) : (class_start_index + ((batch_ind+1)*per_batch))]:
