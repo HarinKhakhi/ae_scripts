@@ -153,10 +153,10 @@ def batch_data(X_all, y_all, per_batch=2):
         X_batched.append(image)
         y_batched.append(class_ind)
         
-    X_batched = np.array(X_batched)
-    y_batched = np.array(y_batched)
-    
-    return X_batched, y_batched
+  X_batched = np.array(X_batched)
+  y_batched = np.array(y_batched)
+  
+  return X_batched, y_batched
 def split_data(params, X, y, train_size=0.8):
   per_class = params['per_class']
   X_train, X_test = [], []
