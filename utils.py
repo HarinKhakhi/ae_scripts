@@ -142,25 +142,22 @@ def set_preprocessor(params, func):
 def preprocess(params, X):
   return params['preprocessor'](X)
 
-def batch_data(X_all, y_all, per_batch=None, total_batches=None):
-  if(per_batch == None and total_batches == None): return None
-  if(per_batch != None and total_batches != None and per_batch*total_batches != len(X_all)): return None
-  
-  per_batch = per_batch if per_batch is not None else int(len(X_all)/total_batches)
-  total_batches = total_batches if total_batches is not None else int(len(X_all)/per_batch)
-  
-  X = []
-  y = []
-  for batch_ind in range(total_batches):
-    start_index = batch_ind*per_batch
-    end_index = (batch_ind+1)*per_batch
+def batch_data(X_all, y_all, per_batch=2):
+  for batch_ind in range(int(X_all.shape[0] / (per_batch*10))):
+    X_batched, y_batched = [], []
     
-    X.append(X_all[start_index: end_index])
-    y.append(y_all[start_index: end_index])
+    per_class = int(X_all.shape[0]/10)
+    for class_ind in range(10):
+      class_start_index = class_ind * per_class
+      for image in X_all[(class_start_index + (batch_ind*per_batch)) : (class_start_index + ((batch_ind+1)*per_batch))]:
+        X_batched.append(image)
+        y_batched.append(class_ind)
+        
+    X_batched = np.array(X_batched)
+    y_batched = np.array(y_batched)
     
-  return np.array(X), np.array(y)
-
-def train_test_split(params, X, y, train_size=0.8):
+    return X_batched, y_batched
+def split_data(params, X, y, train_size=0.8):
   per_class = params['per_class']
   X_train, X_test = [], []
   y_train, y_test = [], []
