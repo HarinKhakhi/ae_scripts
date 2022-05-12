@@ -15,9 +15,11 @@ from tensorflow.keras.applications import inception_v3
 
 from art.attacks.evasion import FastGradientMethod
 from art.attacks.evasion import ProjectedGradientDescent
+from art.attacks.evasion import AutoProjectedGradientDescent
 from art.attacks.evasion import BasicIterativeMethod
 from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
+from art.attacks.evasion import CarliniLInfMethod
 from art.attacks.evasion import NewtonFool
 
 from art.estimators.classification import TensorFlowV2Classifier
@@ -25,8 +27,10 @@ from art.estimators.classification import TensorFlowV2Classifier
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
   PGD = 'PGD'
+  APGD = 'APGD'
   DF = 'DF'
-  CW = 'CW'
+  CW_L2 = 'CW_L2'
+  CW_LInf = 'CW_LInf'
   BIM = 'BIM'
   NF = 'NF'
 
@@ -80,10 +84,14 @@ def initialize(params):
     attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
   elif attack_type == 'PGD':
     attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
+  elif attack_type == 'APGD':
+    attack = AutoProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
   elif attack_type == 'DF':
     attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
-  elif attack_type == 'CW':
+  elif attack_type == 'CW_L2':
     attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
+  elif attack_type == 'CW_LInf':
+    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter)
   elif attack_type == 'BIM':
     attack = BasicIterativeMethod(classifier, epsilon, eps_step)
   elif attack_type == 'NF':
