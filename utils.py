@@ -124,23 +124,22 @@ def initialize(params):
 
 ############################## PROCESSING DATA ##############################
 def to_image(image):
-  OldMin, OldMax = np.min(image), np.max(image)
+  OldMin, OldMax = 0, 1
   NewMin, NewMax = 0.0, 256.0
   OldRange = (OldMax - OldMin)  
   NewRange = (NewMax - NewMin)
   return ((((image - OldMin) * NewRange) / OldRange) + NewMin).astype(np.uint8)
 
-# cv2.normalize(X, 
-#                 None, 
-#                 alpha = 0, beta = 1, 
-#                 norm_type = cv2.NORM_MINMAX, 
-#                 dtype = cv2.CV_32F)
-# params['module'].preprocess_input(X)
-def set_preprocessor(params, func):
-  params['preprocessor'] = func
+# def set_preprocessor(params, func):
+#   params['preprocessor'] = func
 
 def preprocess(params, X):
-  return params['preprocessor'](X)
+  return cv2.normalize(X, 
+                None, 
+                alpha = 0, beta = 1, 
+                norm_type = cv2.NORM_MINMAX, 
+                dtype = cv2.CV_32F)
+  # return params['preprocessor'](X)
 
 def batch_data(X_all, y_all, per_batch=2):
   X_batched, y_batched = [], []
