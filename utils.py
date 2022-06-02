@@ -27,9 +27,9 @@ from art.estimators.classification import TensorFlowV2Classifier
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
   PGD = 'PGD'
-  APGD = 'APGD'
   DF = 'DF'
-  CW_L2 = 'CW_L2'
+  CW = 'CW'
+  CW_L2 = 'CW'
   CW_LInf = 'CW_LInf'
   BIM = 'BIM'
   NF = 'NF'
@@ -39,6 +39,7 @@ class Attacks(enum.Enum):
 # epsilon = 0.1
 # eps_step = epsilon/10
 # attack_type = Attacks.FGSM.name
+# targeted_attack = False
 # prefix = '/content/drive/MyDrive/AE_Resources/Imagenette/Datasets'
 # image_size = (300, 300, 3)
 # per_class = 100
@@ -51,6 +52,7 @@ def initialize(params):
   eps_step = params['eps_step']
   max_iter = params['max_iter']
   attack_type = params['attack_type']
+  targeted_attack = params['targeted_attack']
 
   class_to_index = {
     'n01440764': 0,
@@ -81,19 +83,17 @@ def initialize(params):
   attack = None
 
   if attack_type == 'FGSM':
-    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
+    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=bool(targeted_attack))
   elif attack_type == 'PGD':
-    attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
-  elif attack_type == 'APGD':
-    attack = AutoProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
+    attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=bool(targeted_attack))
   elif attack_type == 'DF':
     attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
-  elif attack_type == 'CW_L2':
-    attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
+  elif attack_type == 'CW' :
+    attack = CarliniL2Method(classifier=classifier, max_iter=max_iter, targeted=bool(targeted_attack))
   elif attack_type == 'CW_LInf':
-    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter)
+    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter, targeted=bool(targeted_attack))
   elif attack_type == 'BIM':
-    attack = BasicIterativeMethod(classifier, epsilon, eps_step)
+    attack = BasicIterativeMethod(classifier, epsilon, eps_step, targeted=bool(targeted_attack))
   elif attack_type == 'NF':
     attack = NewtonFool(classifier, max_iter=max_iter)
   else:
@@ -254,7 +254,7 @@ def create_org_dataset(params):
 
   return {'X': X, 'X_processed': X_processed, 'y': y}
 
-def create_adv_dataset(params, X_all, classes, saveImage=True):
+def create_adv_dataset(params, X_all, classes, y_all=None, saveImage=True):
   per_class = params['per_class']
   attack = params['attack']
   adv_dataset_images = params['adv_dataset_images']
@@ -276,7 +276,7 @@ def create_adv_dataset(params, X_all, classes, saveImage=True):
     # Attacking on subset of dataset
     start = time.perf_counter()
 
-    X_adv = attack.generate(x=X_all[start_index : end_index], verbose=True)
+    X_adv = attack.generate(x=X_all[start_index : end_index], y=y_all, verbose=True)
 
     end = time.perf_counter()
     adv_generating_time += round(end-start,2)
