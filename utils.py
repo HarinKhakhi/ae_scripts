@@ -280,7 +280,7 @@ def create_adv_dataset(params, X_all, classes, y_all=None, saveImage=True):
     # Attacking on subset of dataset
     start = time.perf_counter()
 
-    X_adv = attack.generate(x=X_all[start_index : end_index], y=y_all, verbose=True)
+    X_adv = attack.generate(x=X_all[start_index : end_index], y=y_all[start_index : end_index], verbose=True)
 
     end = time.perf_counter()
     adv_generating_time += round(end-start,2)
