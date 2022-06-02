@@ -47,12 +47,12 @@ class Attacks(enum.Enum):
 
 def initialize(params):
   image_size = params['image_size']
-  prefix = params['prefix']
-  epsilon = params['epsilon']
-  eps_step = params['eps_step']
-  max_iter = params['max_iter']
-  attack_type = params['attack_type']
-  targeted_attack = params['targeted_attack']
+  prefix = params.get('prefix')
+  epsilon = params.get('epsilon')
+  eps_step = params.get('eps_step')
+  max_iter = params.get('max_iter')
+  attack_type = params.get('attack_type')
+  targeted_attack = params.get('targeted_attack')
 
   class_to_index = {
     'n01440764': 0,
