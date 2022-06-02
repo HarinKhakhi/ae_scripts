@@ -110,8 +110,12 @@ def initialize(params):
   params['dataset'] = f"{prefix}/Datasets/imagenette2-320"
   params['org_dataset_images'] = f"{prefix}/Datasets/Original/Images"
   params['org_dataset_npz'] = f"{prefix}/Datasets/Original/NPZ"
-  params['adv_dataset_images'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/Images"
-  params['adv_dataset_npz'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/NPZ"
+  if targeted_attack:
+    params['adv_dataset_images'] = f"{prefix}/Datasets/T_{attack_type}/{epsilon_str}/Images"
+    params['adv_dataset_npz'] = f"{prefix}/Datasets/T_{attack_type}/{epsilon_str}/NPZ"
+  else:
+    params['adv_dataset_images'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/Images"
+    params['adv_dataset_npz'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/NPZ"
   params['autoencoders_dir'] = f"{prefix}/Autoencoders"
   params['results_img_dir'] = f"{prefix}/Results"
   params['results_meta_dir'] = f"{prefix}/Metadata"
