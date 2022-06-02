@@ -15,9 +15,11 @@ from tensorflow.keras.applications import inception_v3
 
 from art.attacks.evasion import FastGradientMethod
 from art.attacks.evasion import ProjectedGradientDescent
+from art.attacks.evasion import AutoProjectedGradientDescent
 from art.attacks.evasion import BasicIterativeMethod
 from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
+from art.attacks.evasion import CarliniLInfMethod
 from art.attacks.evasion import NewtonFool
 
 from art.estimators.classification import TensorFlowV2Classifier
@@ -25,8 +27,10 @@ from art.estimators.classification import TensorFlowV2Classifier
 class Attacks(enum.Enum):
   FGSM = 'FGSM'
   PGD = 'PGD'
+  APGD = 'APGD'
   DF = 'DF'
-  CW = 'CW'
+  CW_L2 = 'CW_L2'
+  CW_LInf = 'CW_LInf'
   BIM = 'BIM'
   NF = 'NF'
 
@@ -80,10 +84,14 @@ def initialize(params):
     attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step)
   elif attack_type == 'PGD':
     attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
+  elif attack_type == 'APGD':
+    attack = AutoProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step)
   elif attack_type == 'DF':
     attack = DeepFool(classifier=classifier, epsilon=epsilon, max_iter=max_iter)
-  elif attack_type == 'CW':
+  elif attack_type == 'CW_L2':
     attack = CarliniL2Method(classifier=classifier, max_iter=max_iter)
+  elif attack_type == 'CW_LInf':
+    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter)
   elif attack_type == 'BIM':
     attack = BasicIterativeMethod(classifier, epsilon, eps_step)
   elif attack_type == 'NF':
@@ -124,23 +132,22 @@ def initialize(params):
 
 ############################## PROCESSING DATA ##############################
 def to_image(image):
-  OldMin, OldMax = np.min(image), np.max(image)
+  OldMin, OldMax = 0, 1
   NewMin, NewMax = 0.0, 256.0
   OldRange = (OldMax - OldMin)  
   NewRange = (NewMax - NewMin)
   return ((((image - OldMin) * NewRange) / OldRange) + NewMin).astype(np.uint8)
 
-# cv2.normalize(X, 
-#                 None, 
-#                 alpha = 0, beta = 1, 
-#                 norm_type = cv2.NORM_MINMAX, 
-#                 dtype = cv2.CV_32F)
-# params['module'].preprocess_input(X)
-def set_preprocessor(params, func):
-  params['preprocessor'] = func
+# def set_preprocessor(params, func):
+#   params['preprocessor'] = func
 
 def preprocess(params, X):
-  return params['preprocessor'](X)
+  return cv2.normalize(X, 
+                None, 
+                alpha = 0, beta = 1, 
+                norm_type = cv2.NORM_MINMAX, 
+                dtype = cv2.CV_32F)
+  # return params['preprocessor'](X)
 
 def batch_data(X_all, y_all, per_batch=2):
   X_batched, y_batched = [], []
