@@ -53,6 +53,7 @@ def initialize(params):
   max_iter = params.get('max_iter')
   attack_type = params.get('attack_type')
   targeted_attack = params.get('targeted_attack')
+  dataset_name = params.get('dataset_name')
 
   class_to_index = {
     'n01440764': 0,
@@ -110,12 +111,14 @@ def initialize(params):
   params['dataset'] = f"{prefix}/Datasets/imagenette2-320"
   params['org_dataset_images'] = f"{prefix}/Datasets/Original/Images"
   params['org_dataset_npz'] = f"{prefix}/Datasets/Original/NPZ"
-  if targeted_attack:
-    params['adv_dataset_images'] = f"{prefix}/Datasets/T_{attack_type}/{epsilon_str}/Images"
-    params['adv_dataset_npz'] = f"{prefix}/Datasets/T_{attack_type}/{epsilon_str}/NPZ"
+
+  if dataset_name:
+    params['adv_dataset_images'] = f"{prefix}/Datasets/{dataset_name}/{epsilon_str}/Images"
+    params['adv_dataset_npz'] = f"{prefix}/Datasets/{dataset_name}/{epsilon_str}/NPZ"
   else:
     params['adv_dataset_images'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/Images"
     params['adv_dataset_npz'] = f"{prefix}/Datasets/{attack_type}/{epsilon_str}/NPZ"
+  
   params['autoencoders_dir'] = f"{prefix}/Autoencoders"
   params['results_img_dir'] = f"{prefix}/Results"
   params['results_meta_dir'] = f"{prefix}/Metadata"
