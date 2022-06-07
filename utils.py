@@ -213,7 +213,7 @@ def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
 
 def load_dataset(source_path, **kwargs):
   
-  per_class = kwargs.get('per_class')
+  per_class = get(100,kwargs.get('per_class'))
   source_images =  source_path + '/Images'
   source_npz = source_path + '/NPZ'
   
