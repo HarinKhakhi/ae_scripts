@@ -152,8 +152,6 @@ def get_attack(attack_type, classifier, **kwargs):
   return attack
 
 def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
-  adv_dataset_images = kwargs.get('target_path') + '/Images'
-  adv_dataset_npz = kwargs.get('target_path') + '/NPZ'
   per_class = get(100, kwargs.get('per_class'))
   classes_to_attack = get(class_list, kwargs.get('class_list'))
   attack = get_attack(classifier=classifier, attack_type=attack_type, **kwargs)
@@ -181,6 +179,9 @@ def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
     print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy))
     
     if kwargs.get('save_image'):
+      adv_dataset_images = kwargs.get('target_path') + '/Images'
+      adv_dataset_npz = kwargs.get('target_path') + '/NPZ'
+      
       # Creating the directories 
       os.mkdirs(adv_dataset_images)
       os.mkdirs(adv_dataset_npz)
