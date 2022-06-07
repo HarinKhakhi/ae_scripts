@@ -211,7 +211,7 @@ def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
   print('time taken: ', adv_generating_time)
   return np.array(X_adv_all)
 
-def load_dataset(source_path, **kwargs):
+def load_dataset(source_path, kind, **kwargs):
   
   per_class = get(100,kwargs.get('per_class'))
   source_images =  source_path + '/Images'
@@ -224,7 +224,7 @@ def load_dataset(source_path, **kwargs):
     for class_name in class_list:
       for ind in range(per_class):
         # File path
-        image_file_name = f'original_{class_name}_{ind}.png'
+        image_file_name = f'{kind}_{class_name}_{ind}.png'
         image_file_path = join(source_images, image_file_name)
 
         # Opening
@@ -239,7 +239,7 @@ def load_dataset(source_path, **kwargs):
   else:
     for class_name in class_list:
       # File path
-      image_file_name = f'original_{class_name}.npz'
+      image_file_name = f'{kind}_{class_name}_{ind}.png'
       image_file_path = join(source_npz, image_file_name)
 
       # Opening
