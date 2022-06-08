@@ -42,7 +42,7 @@ class_to_index = {
   'n03445777': 574,
   'n03888257': 701,
 }
-class_list = class_to_index.keys()
+class_list = list(class_to_index.keys())
 
 def preprocess(image):
   return normalize(image, 
