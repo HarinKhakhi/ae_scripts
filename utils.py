@@ -62,7 +62,7 @@ def get(defalut, value):
   if value is None:
     return defalut
   else:
-    value
+    return value
 
 def create_org_dataset(source_path, target_path, **kwargs):
   org_dataset_images = target_path + '/Images'
@@ -151,7 +151,7 @@ def get_attack(attack_type, classifier, **kwargs):
   
   return attack
 
-def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
+def create_adv_dataset(classifier, attack_type, X, y=None, **kwargs):
   per_class = get(100, kwargs.get('per_class'))
   classes_to_attack = get(class_list, kwargs.get('class_list'))
   attack = get_attack(classifier=classifier, attack_type=attack_type, **kwargs)
@@ -169,7 +169,7 @@ def create_adv_dataset(classifier, attack_type, X_all, y_all=None, **kwargs):
     # Attacking on subset of dataset
     start = time.perf_counter()
 
-    X_adv = attack.generate(x=X_all[start_index : end_index], y=y_all[start_index : end_index], verbose=get(True, kwargs.get('verbose')))
+    X_adv = attack.generate(x=X[start_index : end_index], y=y[start_index : end_index], verbose=get(True, kwargs.get('verbose')))
 
     end = time.perf_counter()
     adv_generating_time += round(end-start,2)
