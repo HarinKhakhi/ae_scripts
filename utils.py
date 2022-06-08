@@ -164,8 +164,7 @@ def create_adv_dataset(classifier, attack_type, X, y=None, **kwargs):
     class_index = class_list.index(class_name)
     start_index = class_index * per_class
     end_index = (class_index+1) * per_class
-
-    print(f'Attacking Class {class_index}: {class_name}')
+    if not kwargs.get('silent'): print(f'Attacking Class {class_index}: {class_name}')
     # Attacking on subset of dataset
     start = time.perf_counter()
 
@@ -176,7 +175,7 @@ def create_adv_dataset(classifier, attack_type, X, y=None, **kwargs):
 
     y_adv = np.argmax(classifier.predict(X_adv), axis=1)
     adv_accuracy.append(np.sum(class_to_index[class_name] == y_adv)/len(y_adv))
-    print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy))
+    if not kwargs.get('silent'): print('Current Adversarial Accuracy :', sum(adv_accuracy)/len(adv_accuracy))
     
     if kwargs.get('save_image'):
       adv_dataset_images = kwargs.get('target_path') + '/Images'
