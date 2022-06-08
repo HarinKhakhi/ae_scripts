@@ -58,9 +58,9 @@ def to_image(image):
           norm_type = NORM_MINMAX, 
           dtype = CV_16U)
 
-def get(defalut, value):
+def get(default, value):
   if value is None:
-    return defalut
+    return default
   else:
     return value
 
@@ -133,8 +133,8 @@ def get_attack(attack_type, classifier, **kwargs):
   attack = None
   epsilon = get(0.01, kwargs.get('epsilon'))
   eps_step = epsilon/10
-  max_iter = get(100, kwargs('max_iter'))
-  targeted = get(False, kwargs('targeted'))
+  max_iter = get(100, kwargs.get('max_iter'))
+  targeted = get(False, kwargs.get('targeted'))
   
   if attack_type == 'FGSM':
     attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted)
