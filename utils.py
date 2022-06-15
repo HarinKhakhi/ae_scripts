@@ -64,16 +64,18 @@ def get(default, value):
   else:
     return value
 
-def create_org_dataset(source_path, target_path, **kwargs):
-  org_dataset_images = target_path + '/Images'
-  org_dataset_npz = target_path + '/NPZ'
+def create_org_dataset(source_path, **kwargs):
+  org_dataset_images, org_dataset_npz = None, None
+  save_image = get(False, kwargs.get('save_image'))
   image_size = get((300,300,3), kwargs.get('image_size'))
   per_class = get(100, kwargs.get('per_class'))
-  
-  # Creating the directories 
-  os.mkdirs(org_dataset_images)
-  os.mkdirs(org_dataset_npz)
-    
+  if save_image:
+    org_dataset_images = target_path + '/Images'
+    org_dataset_npz = target_path + '/NPZ'
+    # Creating the directories 
+    os.mkdirs(org_dataset_images)
+    os.mkdirs(org_dataset_npz)
+      
   # Initialization  
   X_processed = []
   X = []
@@ -99,8 +101,9 @@ def create_org_dataset(source_path, target_path, **kwargs):
         continue
       
       # Saving the images
-      file_name = join(org_dataset_images, 'original_' + str(directory) + '_' + str(cnt) + '.png')
-      image.save(file_name)
+      if save_image:
+        file_name = join(org_dataset_images, 'original_' + str(directory) + '_' + str(cnt) + '.png')
+        image.save(file_name)
 
       X.append(image_array)
       
@@ -116,9 +119,10 @@ def create_org_dataset(source_path, target_path, **kwargs):
 
     processed_images = np.array(processed_images)
 
-    # Saving the processed images in npz form
-    file_name = join(org_dataset_npz, f'original_{directory}.npz')
-    np.savez_compressed(file_name, data=processed_images)
+    if save_image:
+      # Saving the processed images in npz form
+      file_name = join(org_dataset_npz, f'original_{directory}.npz')
+      np.savez_compressed(file_name, data=processed_images)
 
     print("Done class " + directory, end='\n') 
   
