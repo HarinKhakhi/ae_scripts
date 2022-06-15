@@ -136,7 +136,7 @@ def create_org_dataset(source_path, **kwargs):
 def get_attack(attack_type, classifier, **kwargs):
   attack = None
   epsilon = get(0.01, kwargs.get('epsilon'))
-  eps_step = epsilon/10
+  eps_step = get(epsilon/10, kwargs.get('eps_step'))
   max_iter = get(100, kwargs.get('max_iter'))
   targeted = get(False, kwargs.get('targeted'))
   
