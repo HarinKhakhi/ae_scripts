@@ -141,15 +141,15 @@ def get_attack(attack_type, classifier, **kwargs):
   targeted = get(False, kwargs.get('targeted'))
   
   if attack_type == 'FGSM':
-    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted)
+    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'PGD':
-    attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted)
+    attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'CW' :
-    attack = CarliniL2Method(classifier=classifier, max_iter=max_iter, targeted=targeted)
+    attack = CarliniL2Method(classifier=classifier, max_iter=max_iter, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'CW_LInf':
-    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter, targeted=targeted)
+    attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'BIM':
-    attack = BasicIterativeMethod(classifier, epsilon, eps_step, targeted=targeted)
+    attack = BasicIterativeMethod(classifier, epsilon, eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   else:
     raise NameError("Attack is not available")
   
@@ -158,6 +158,7 @@ def get_attack(attack_type, classifier, **kwargs):
 def create_adv_dataset(classifier, attack_type, X, y=None, **kwargs):
   per_class = get(100, kwargs.get('per_class'))
   classes_to_attack = get(class_list, kwargs.get('class_list'))
+  targeted = get(False, kwargs.get('targeted'))
   attack = get_attack(classifier=classifier, attack_type=attack_type, **kwargs)
   
   X_adv_all = []
@@ -171,8 +172,12 @@ def create_adv_dataset(classifier, attack_type, X, y=None, **kwargs):
     if not kwargs.get('silent'): print(f'Attacking Class {class_index}: {class_name}')
     # Attacking on subset of dataset
     start = time.perf_counter()
-
-    X_adv = attack.generate(x=X[start_index : end_index], y=y[start_index : end_index], verbose=get(True, kwargs.get('verbose')))
+    X_adv = []
+    
+    if targeted:
+      X_adv = attack.generate(x=X[start_index : end_index], y=y[start_index : end_index])
+    else:
+      X_adv = attack.generate(x=X[start_index : end_index])
 
     end = time.perf_counter()
     adv_generating_time += round(end-start,2)
