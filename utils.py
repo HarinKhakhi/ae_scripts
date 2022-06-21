@@ -151,7 +151,7 @@ def get_attack(attack_type, classifier, **kwargs):
   elif attack_type == 'CW_LInf':
     attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'BIM':
-    attack = BasicIterativeMethod(classifier, max_iter=max_iter, epsilon, eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
+    attack = BasicIterativeMethod(classifier, max_iter=max_iter, eps=epsilon, eps_step=eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'DF':
     attack = DeepFool(classifier, max_iter=max_iter, epsilon=epsilon, verbose=get(True, kwargs.get('verbose')))
   else:
