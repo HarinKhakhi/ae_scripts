@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from art.attacks.evasion import FastGradientMethod
 from art.attacks.evasion import ProjectedGradientDescent
 from art.attacks.evasion import BasicIterativeMethod
+from art.attacks.evasion import DeepFool
 from art.attacks.evasion import CarliniL2Method
 from art.attacks.evasion import CarliniLInfMethod
 from art.estimators.classification import TensorFlowV2Classifier, KerasClassifier
@@ -28,6 +29,7 @@ class Attacks(Enum):
   CW_L2 = 'CW_L2'
   CW_LInf = 'CW_LInf'
   BIM = 'BIM'
+  DF = 'DF'
 
 
 class_to_index = {
@@ -141,7 +143,7 @@ def get_attack(attack_type, classifier, **kwargs):
   targeted = get(False, kwargs.get('targeted'))
   
   if attack_type == 'FGSM':
-    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
+    attack = FastGradientMethod(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted)
   elif attack_type == 'PGD':
     attack = ProjectedGradientDescent(estimator=classifier, eps=epsilon, eps_step=eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'CW' :
@@ -150,6 +152,8 @@ def get_attack(attack_type, classifier, **kwargs):
     attack = CarliniLInfMethod(classifier=classifier, max_iter=max_iter, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
   elif attack_type == 'BIM':
     attack = BasicIterativeMethod(classifier, epsilon, eps_step, targeted=targeted, verbose=get(True, kwargs.get('verbose')))
+  elif attack_type == 'DF':
+    attack = DeepFool(classifier, max_iter=max_iter, epsilon=epsilon, verbose=get(True, kwargs.get('verbose')))
   else:
     raise NameError("Attack is not available")
   
